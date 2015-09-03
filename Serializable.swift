@@ -29,7 +29,11 @@ class Serializable: NSObject
                 
                 transfer[i.label!] = serializedChildren
             }
-                // Otherwise, serialize the property as long as it is not nil
+            // If this is a serializable object, serialize it
+            else if let value = i.value as? Serializable {
+                transfer[i.label!] = value.serialize()
+            }
+            // Otherwise, serialize the property as long as it is not nil
             else if let value = i.value as? AnyObject {
                 transfer[i.label!] = value
             }
@@ -76,6 +80,23 @@ class Serializable: NSObject
                 }
                 
                 target.setValue(children, forKey: item.0)
+            } else if let _ = item.1 as? NSDictionary {
+            
+                var parameterTypeString = target.getTypeOfVariableWithName(item.0)
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString("<").last
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(">").first
+                
+                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(".")
+                if extensionParameterTypeStringArray?.count > 1 {
+                    parameterTypeString = extensionParameterTypeStringArray?.last
+                }
+                
+                let nsobjectype : NSObject.Type = NSClassFromString(parameterTypeString!) as! NSObject.Type
+            
+                let child: Serializable = (nsobjectype.init() as? Serializable)!
+                child.deserialize(item.1 as! [String : AnyObject])
+            
+                target.setValue(child, forKey: item.0)
             } else {
                 target.setValue(item.1, forKey: item.0)
             }
