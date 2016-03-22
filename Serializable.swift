@@ -10,6 +10,10 @@ import UIKit
 
 public class Serializable: NSObject
 {
+    private static let lessThanString = "<"
+    private static let greaterThanString = ">"
+    private static let periodString = "."
+    
     required public override init() {
         super.init()
     }
@@ -69,10 +73,10 @@ public class Serializable: NSObject
                 var children = [Serializable]()
                 
                 var parameterTypeString = target.getTypeOfVariableWithName(item.0)
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString("<").last
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString(">").first
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.lessThanString).last
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.greaterThanString).first
                 
-                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(".")
+                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(Serializable.periodString)
                 if extensionParameterTypeStringArray?.count > 1 {
                     parameterTypeString = extensionParameterTypeStringArray?.last
                 }
@@ -89,10 +93,10 @@ public class Serializable: NSObject
             } else if let _ = item.1 as? NSDictionary {
                 
                 var parameterTypeString = target.getTypeOfVariableWithName(item.0)
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString("<").last
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString(">").first
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.lessThanString).last
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.greaterThanString).first
                 
-                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(".")
+                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(Serializable.periodString)
                 if extensionParameterTypeStringArray?.count > 1 {
                     parameterTypeString = extensionParameterTypeStringArray?.last
                 }
@@ -128,10 +132,10 @@ public class Serializable: NSObject
                 var children = [Serializable]()
                 
                 var parameterTypeString = self.getTypeOfVariableWithName(item.0)
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString("<").last
-                parameterTypeString = parameterTypeString?.componentsSeparatedByString(">").first
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.lessThanString).last
+                parameterTypeString = parameterTypeString?.componentsSeparatedByString(Serializable.greaterThanString).first
                 
-                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(".")
+                let extensionParameterTypeStringArray = parameterTypeString?.componentsSeparatedByString(Serializable.periodString)
                 if extensionParameterTypeStringArray?.count > 1 {
                     parameterTypeString = extensionParameterTypeStringArray?.last
                 }
