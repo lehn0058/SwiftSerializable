@@ -167,7 +167,7 @@ public class Serializable: NSObject
         for i in mirror.children
         {
             if i.label == name {
-                let longName = _stdlib_getDemangledTypeName(i.value)
+                let longName = String(i.value.dynamicType)
                 return longName
             }
         }
