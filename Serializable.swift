@@ -14,8 +14,21 @@ public class Serializable: NSObject
     private static let greaterThanString = ">"
     private static let periodString = "."
     
+    let dateFormatter = DateFormatter()
+    
     required public override init() {
         super.init()
+        
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
+    }
+    
+    public static func serialize(items: [Serializable]) -> [[String:AnyObject]] {
+        var serializedItems = [[String:AnyObject]]()
+        for item in items {
+            serializedItems.append(item.serialize())
+        }
+        
+        return serializedItems
     }
     
     // Convert this object into a dictionary
@@ -39,7 +52,35 @@ public class Serializable: NSObject
             }
                 // Otherwise, serialize the property as long as it is not nil
             else {
-                transfer[i.label!] = i.value as AnyObject
+                if let value = i.value as? NSNumber {
+                    transfer[i.label!] = value
+                } else if let value = i.value as? Int8 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Int16 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Int32 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Int64 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Double {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Float {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? Bool {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if i.value is String {
+                    transfer[i.label!] = i.value as AnyObject
+                } else if i.value is Date {
+                    transfer[i.label!] = dateFormatter.string(from: i.value as! Date) as AnyObject?
+                } else if let value = i.value as? UInt8 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? UInt16 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? UInt32 {
+                    transfer[i.label!] = NSNumber(value: value)
+                } else if let value = i.value as? UInt64 {
+                    transfer[i.label!] = NSNumber(value: value)
+                }
             }
         }
         
@@ -59,7 +100,7 @@ public class Serializable: NSObject
     }
     
     // Convert a dictionary to an object of type T
-    public static func deserialize<T: Serializable>(_ transfer: [String:AnyObject]) -> T {
+    public static func deserialize<T: Serializable>(_ transfer: Any) -> T {
         let target = T()
         
         let dateFormatter = DateFormatter()
@@ -68,61 +109,34 @@ public class Serializable: NSObject
         let dateFormatter2 = DateFormatter()
         dateFormatter2.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ"
         
-        for item in transfer {
-            if let values = item.1 as? NSArray {
-                var children = [Serializable]()
-                
-                var parameterTypeString = target.getTypeOfVariableWithName(name: item.0)
-                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.lessThanString).last
-                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.greaterThanString).first
-                
-                
-                let extensionParameterTypeStringArray = parameterTypeString?.components(separatedBy: Serializable.periodString)
-                if (extensionParameterTypeStringArray?.count)! > 1 {
-                    parameterTypeString = extensionParameterTypeStringArray?.last
-                }
-                
-                if let nsobjectype = NSClassFromString(parameterTypeString!) as? NSObject.Type {
-                    for value in values {
-                        let child: Serializable = (nsobjectype.init() as? Serializable)!
-                        child.deserialize(transfer: value as! [String : AnyObject], dateFormatter: dateFormatter, dateFormatter2: dateFormatter2)
-                        children.append(child)
-                    }
-                    
-                    target.setValue(children, forKey: item.0)
-                }
-            } else if let _ = item.1 as? NSDictionary {
-                var parameterTypeString = target.getTypeOfVariableWithName(name: item.0)
-                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.lessThanString).last
-                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.greaterThanString).first
-                
-                let extensionParameterTypeStringArray = parameterTypeString?.components(separatedBy: Serializable.periodString)
-                if (extensionParameterTypeStringArray?.count)! > 1 {
-                    parameterTypeString = extensionParameterTypeStringArray?.last
-                }
-                
-                let nsobjectype : NSObject.Type = NSClassFromString(parameterTypeString!) as! NSObject.Type
-                
-                let child: Serializable = (nsobjectype.init() as? Serializable)!
-                child.deserialize(transfer: item.1 as! [String : AnyObject], dateFormatter: dateFormatter, dateFormatter2: dateFormatter2)
-                
-                target.setValue(child, forKey: item.0)
-            } else {
-                // Don't try to assign the value if it is null
-                if !(item.1 is NSNull) {
-                    // If the response property is a string, check to see if it should be an NSDate
-                    if let stringValue = item.1 as? String {
-                        if let date = dateFormatter.date(from: stringValue) {
-                            target.setValue(date, forKey: item.0)
-                        } else if let date = dateFormatter2.date(from: stringValue) {
-                            target.setValue(date, forKey: item.0)
-                        } else {
-                            target.setValue(item.1, forKey: item.0)
-                        }
-                    } else {
-                        target.setValue(item.1, forKey: item.0)
-                    }
-                }
+        if let data = transfer as? Data { // If we were given data
+            let jsonData = try! JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments)
+            return deserialize(jsonData)
+        } else if let transfer = transfer as? [String:AnyObject] { // If we were given a json object
+            target.deserialize(transfer: transfer, dateFormatter: dateFormatter, dateFormatter2: dateFormatter2)
+        }
+        
+        return target
+    }
+    
+    // Convert a dictionary to an object of type T
+    public static func deserialize<T: Serializable>(_ transfer: Any) -> [T] {
+        var target = [T]()
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
+        
+        let dateFormatter2 = DateFormatter()
+        dateFormatter2.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ"
+        
+        if let data = transfer as? Data { // If we were given data
+            let jsonData = try! JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments)
+            return deserialize(jsonData)
+        } else if let transfer = transfer as? [Any] { // If we were given an array of json objects
+            for item in transfer {
+                let newItem = T()
+                newItem.deserialize(transfer: item as! [String : AnyObject], dateFormatter: dateFormatter, dateFormatter2: dateFormatter2)
+                target.append(newItem)
             }
         }
         
@@ -152,6 +166,22 @@ public class Serializable: NSObject
                 }
                 
                 self.setValue(children, forKey: item.0)
+            } else if let _ = item.1 as? NSDictionary {
+                var parameterTypeString = self.getTypeOfVariableWithName(name: item.0)
+                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.lessThanString).last
+                parameterTypeString = parameterTypeString?.components(separatedBy: Serializable.greaterThanString).first
+                
+                let extensionParameterTypeStringArray = parameterTypeString?.components(separatedBy: Serializable.periodString)
+                if (extensionParameterTypeStringArray?.count)! > 1 {
+                    parameterTypeString = extensionParameterTypeStringArray?.last
+                }
+                
+                let nsobjectype : NSObject.Type = NSClassFromString(parameterTypeString!) as! NSObject.Type
+                
+                let child: Serializable = (nsobjectype.init() as? Serializable)!
+                child.deserialize(transfer: item.1 as! [String : AnyObject], dateFormatter: dateFormatter, dateFormatter2: dateFormatter2)
+                
+                self.setValue(child, forKey: item.0)
             } else {
                 if let stringValue = item.1 as? String {
                     if let date = dateFormatter.date(from: stringValue) {
