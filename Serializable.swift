@@ -13,7 +13,7 @@ public class Serializable: NSObject
     private static let greaterThanString = ">"
     private static let periodString = "."
     
-    let dateFormatter: DateFormatter?
+    var dateFormatter: DateFormatter?
     
     required public override init() {
         super.init()
@@ -72,10 +72,10 @@ public class Serializable: NSObject
                     
                     if self.dateFormatter == nil {
                         self.dateFormatter = DateFormatter()
-                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
+                        self.dateFormatter?.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
                     }
                     
-                    transfer[i.label!] = dateFormatter.string(from: i.value as! Date) as AnyObject?
+                    transfer[i.label!] = dateFormatter!.string(from: i.value as! Date) as AnyObject?
                 } else if let value = i.value as? UInt8 {
                     transfer[i.label!] = NSNumber(value: value)
                 } else if let value = i.value as? UInt16 {

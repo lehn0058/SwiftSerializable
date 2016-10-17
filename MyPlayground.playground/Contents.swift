@@ -1,19 +1,23 @@
+//
+//  Serializable.swift
+//
+//  Created by Brandon Lehner on 8/15/15.
+//  Copyright © 2015 App Techies. All rights reserved.
+//
 
 import UIKit
 
-//: Serializable implementation
 public class Serializable: NSObject
 {
     private static let lessThanString = "<"
     private static let greaterThanString = ">"
     private static let periodString = "."
     
-    let dateFormatter = DateFormatter()
+    var dateFormatter: DateFormatter?
     
     required public override init() {
         super.init()
         
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
     }
     
     public static func serialize(items: [Serializable]) -> [[String:AnyObject]] {
@@ -40,11 +44,11 @@ public class Serializable: NSObject
                 
                 transfer[i.label!] = serializedChildren as AnyObject?
             }
-            // If this is a serializable object, serialize it
+                // If this is a serializable object, serialize it
             else if let value = i.value as? Serializable {
                 transfer[i.label!] = value.serialize() as AnyObject?
             }
-            // Otherwise, serialize the property as long as it is not nil
+                // Otherwise, serialize the property as long as it is not nil
             else {
                 if let value = i.value as? NSNumber {
                     transfer[i.label!] = value
@@ -65,7 +69,13 @@ public class Serializable: NSObject
                 } else if i.value is String {
                     transfer[i.label!] = i.value as AnyObject
                 } else if i.value is Date {
-                    transfer[i.label!] = dateFormatter.string(from: i.value as! Date) as AnyObject?
+                    
+                    if self.dateFormatter == nil {
+                        self.dateFormatter = DateFormatter()
+                        self.dateFormatter?.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
+                    }
+                    
+                    transfer[i.label!] = dateFormatter!.string(from: i.value as! Date) as AnyObject?
                 } else if let value = i.value as? UInt8 {
                     transfer[i.label!] = NSNumber(value: value)
                 } else if let value = i.value as? UInt16 {
