@@ -1,6 +1,5 @@
 //
 //  Serializable.swift
-//  fit
 //
 //  Created by Brandon Lehner on 8/15/15.
 //  Copyright © 2015 App Techies. All rights reserved.
@@ -14,12 +13,11 @@ public class Serializable: NSObject
     private static let greaterThanString = ">"
     private static let periodString = "."
     
-    let dateFormatter = DateFormatter()
+    let dateFormatter: DateFormatter?
     
     required public override init() {
         super.init()
         
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
     }
     
     public static func serialize(items: [Serializable]) -> [[String:AnyObject]] {
@@ -71,6 +69,12 @@ public class Serializable: NSObject
                 } else if i.value is String {
                     transfer[i.label!] = i.value as AnyObject
                 } else if i.value is Date {
+                    
+                    if self.dateFormatter == nil {
+                        self.dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SS"
+                    }
+                    
                     transfer[i.label!] = dateFormatter.string(from: i.value as! Date) as AnyObject?
                 } else if let value = i.value as? UInt8 {
                     transfer[i.label!] = NSNumber(value: value)
